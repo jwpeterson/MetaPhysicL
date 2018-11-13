@@ -417,11 +417,39 @@ private:
   metaphysicl_map_decl(VectorValue<double>);
 };
 
-metaphysicl_const_return_def(operator(), VectorValue<double>);
-metaphysicl_nonconst_return_def(operator(), VectorValue<double>);
-metaphysicl_const_return_def(norm, VectorValue<double>);
+//metaphysicl_const_return_def(operator(), VectorValue<double>);
+  template <typename D>
+  template <class... Args>
+  auto NDDualNumber<VectorValue<double>, D>::operator()(Args &&... args) const -> NDDualNumber<
+      typename std::remove_const<typename std::remove_reference<decltype(
+          VectorValue<double>().operator()(std::forward<Args>(args)...))>::type>::type,
+      typename D::template rebind<typename std::remove_const<typename std::remove_reference<
+          decltype(VectorValue<double>().operator()(std::forward<Args>(args)...))>::type>::type>::other>
+  {
+    typedef typename D::template rebind<typename std::remove_const<typename std::remove_reference<
+      decltype(VectorValue<double>().operator()(std::forward<Args>(args)...))>::type>::type>::other
+        DerivativeType;
+    DerivativeType deriv;
+    auto outer_size = D().size();
+    auto inner_template_dn =
+        this->convert_to_outer(this->inner_template().operator()(std::forward<Args>(args)...));
+    auto & inner_template_value = inner_template_dn.value();
+    auto & inner_template_derivatives = inner_template_dn.derivatives();
+    auto inner_size = inner_template_derivatives.size();
+    for (decltype(outer_size) outer_di = 0; outer_di < outer_size; ++outer_di)
+    {
+      deriv[outer_di] = 0;
+      for (decltype(inner_size) inner_di = 0; inner_di < inner_size; ++inner_di)
+        deriv[outer_di] +=
+            inner_template_derivatives[inner_di] * this->derivatives()[outer_di](inner_di);
+    }
+    return {inner_template_value, deriv};
+  }
 
-metaphysicl_map_api_def(VectorValue<double>);
+//metaphysicl_nonconst_return_def(operator(), VectorValue<double>);
+//metaphysicl_const_return_def(norm, VectorValue<double>);
+
+// metaphysicl_map_api_def(VectorValue<double>);
 
 template <typename D>
 constexpr double NotADuckDualNumber<VectorValue<double>, D>::_e0[3];
@@ -527,12 +555,12 @@ private:
   metaphysicl_map_decl(TensorValue<double>);
 };
 
-metaphysicl_const_return_def(operator(), TensorValue<double>);
-metaphysicl_nonconst_return_def(operator(), TensorValue<double>);
-metaphysicl_const_return_def(tr, TensorValue<double>);
-metaphysicl_const_return_def(transpose, TensorValue<double>);
+// metaphysicl_const_return_def(operator(), TensorValue<double>);
+// metaphysicl_nonconst_return_def(operator(), TensorValue<double>);
+// metaphysicl_const_return_def(tr, TensorValue<double>);
+// metaphysicl_const_return_def(transpose, TensorValue<double>);
 
-metaphysicl_map_api_def(TensorValue<double>);
+// metaphysicl_map_api_def(TensorValue<double>);
 
 template <typename D>
 constexpr double NotADuckDualNumber<TensorValue<double>, D>::_e0[9];

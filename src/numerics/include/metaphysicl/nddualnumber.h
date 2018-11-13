@@ -406,17 +406,17 @@ void_helper(void (TBase::*fn)(PtrArgs...), NDDualNumber<T, D> & calling_dn, Para
 #define metaphysicl_const_return_def(method_name, SpecialType)                                     \
   template <typename D>                                                                            \
   template <class... Args>                                                                         \
-  auto NDDualNumber<SpecialType, D>::method_name(Args &&... args) const->NDDualNumber<             \
+  auto NDDualNumber<SpecialType, D>::method_name(Args &&... args) const -> NDDualNumber<             \
       typename std::remove_const<typename std::remove_reference<decltype(                          \
-          this->value().method_name(std::forward<Args>(args)...))>::type>::type,                   \
+          SpecialType().method_name(std::forward<Args>(args)...))>::type>::type,                   \
       typename D::template rebind<typename std::remove_const<typename std::remove_reference<       \
-          decltype(this->value().method_name(std::forward<Args>(args)...))>::type>::type>::other>  \
+          decltype(SpecialType().method_name(std::forward<Args>(args)...))>::type>::type>::other>  \
   {                                                                                                \
     typedef typename D::template rebind<typename std::remove_const<typename std::remove_reference< \
-        decltype(this->value().method_name(std::forward<Args>(args)...))>::type>::type>::other     \
+      decltype(SpecialType().method_name(std::forward<Args>(args)...))>::type>::type>::other \
         DerivativeType;                                                                            \
     DerivativeType deriv;                                                                          \
-    auto outer_size = this->derivatives().size();                                                  \
+    auto outer_size = D().size();                    \
     auto inner_template_dn =                                                                       \
         this->convert_to_outer(this->inner_template().method_name(std::forward<Args>(args)...));   \
     auto & inner_template_value = inner_template_dn.value();                                       \
@@ -439,9 +439,9 @@ void_helper(void (TBase::*fn)(PtrArgs...), NDDualNumber<T, D> & calling_dn, Para
   auto NDDualNumber<SpecialType, D>::method_name(Args &&... args)                                  \
       ->DualNumberSurrogate<                                                                       \
           typename std::remove_reference<decltype(                                                 \
-              this->value().method_name(std::forward<Args>(args)...))>::type,                      \
+          SpecialType().method_name(std::forward<Args>(args)...))>::type, \
           typename D::template rebind<typename std::remove_reference<decltype(                     \
-              this->value().method_name(std::forward<Args>(args)...))>::type *>::other> &          \
+          SpecialType().method_name(std::forward<Args>(args)...))>::type *>::other> & \
   {                                                                                                \
     typename SpecialType::index_type key(std::forward<Args>(args)...);                             \
     dns_try_emplace(key, std::forward<Args>(args)...);                                             \
